@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang= 'en-us'>
+    <head>
+        <title>Feed The Monster</title>
+        <style>
+            #style{
+                border: 4px dotted green;
+                margin-top: 1cm;
+                margin-left: 18cm; 
+            }
+
+            #first{
+                background: radial-gradient(rgb(184, 182, 182),rgb(10, 0, 0));
+            }
+
+            #second{
+                font-size: 70px;
+                font-style: italic;
+                font-weight: bolder;
+                color: rgb(53, 21, 21);
+                margin-left: 5cm;
+                margin-right: 5cm;
+                padding-left: 2cm;
+                /*background-color: rgb(184, 182, 182);
+                border: 2px inset black;*/
+            }
+
+            #third{
+                margin-left: 5cm;
+                font-style: italic;
+                font-size: 20px;
+            }
+
+            #fourth{
+                margin-left: 10cm;
+            }
+            
+        </style>
+    </head>
+    <body onload= 'init();' id= 'first'>
+        <div id='second'>FEED THE MONSTER</div>
+        <span id= 'fourth'>harsh</span>
+        <canvas id= 'style' height= '450' width= '450'>
+            Your browser does not support canvas...
+        </canvas>
+        <br>
+        <a href= 'D:\visual studio\project_3\Welcome.html' id='third'>TO GO BACK</a>
+        <script>
+            var canvas,cxt,h,w,mousePos;
+            var player= {
+                x: 10,
+                y: 10,
+                height: 20,
+                width: 20,
+                color: 'red'
+            };
+
+            function init(){
+                canvas= document.querySelector('#style');
+                cxt= canvas.getContext('2d');
+                h= canvas.height;
+                w= canvas.width;
+                createBalls(12);
+                canvas.addEventListener('mousemove',function(evt){
+                    mousePos= getMousePos(canvas,evt);
+                });
+                main();
+            }
+
+            function createBalls(c){
+                ball= [];
+                var i;
+                for(i=0;i<c;i++){
+                    var k= {
+                        x: h/2,
+                        y: w/2,
+                        color: colorGenerate(),
+                        radius: 5+Math.round(30*Math.random()), 
+                        a: -5+Math.round(10*Math.random()),
+                        b: -5+Math.round(10*Math.random())
+                    }
+                    ball.push(k);
+                }
+            }
+
+            function main(){
+                cxt.clearRect(0,0,h,w);
+                createPlayer();
+                draw(ball.length);
+                ballAlive();
+                move(ball);
+                movePlayer();
+                requestAnimationFrame(main);
+            }
+
+            function ballAlive(){
+                cxt.save();
+                cxt.font="30px Arial";
+                if(ball.length==0) cxt.fillText("You Win",20,20);
+                else cxt.fillText(ball.length,20,40);
+                cxt.restore();
+            }
+
+            function getMousePos(canvas,evt){
+                var rect= canvas.getBoundingClientRect();
+                return{
+                    x: evt.clientX-rect.left,
+                    y: evt.clientY-rect.top
+                }
+            }
+
+            function createPlayer(){
+                cxt.save();
+                cxt.translate(player.x,player.y);
+                //cxt.fillStyle= player.color;
+                cxt.strokeRect(0,0,50,50);
+                cxt.fillStyle= 'black';
+                cxt.fillRect(10,10,5,5);
+                cxt.fillRect(35,10,5,5);
+                cxt.fillRect(23,15,5,20);
+                cxt.beginPath();
+                cxt.arc(25,40,6,0,Math.PI);
+                cxt.fill();
+                cxt.restore();
+            }
+
+            function movePlayer(){
+                if(mousePos !== undefined){
+                    player.x= mousePos.x;
+                    player.y= mousePos.y;
+                }
+            }
+
+            function draw(d){
+                var i;
+                for(i=0;i<d;i++){
+                    cxt.save();
+                    cxt.translate(0,0);
+                    cxt.beginPath();
+                    cxt.fillStyle= ball[i].color;
+                    cxt.arc(ball[i].x,ball[i].y,ball[i].radius,0,2*Math.PI)
+                    cxt.fill();
+                    cxt.restore();
+                }
+            }
+
+            function move(m){
+                var i;
+                for(i=0;i<m.length;i++){
+                    ball[i].x+= ball[i].a;
+                    ball[i].y+= ball[i].b;
+                    checkCollision(ball[i]);
+                    checkCollisionPlayer(ball[i],i);
+                }
+            }
+
+            function checkCollision(n){
+                if(n.x+n.radius>w){
+                    n.a= -n.a;
+                    n.x= w-n.radius;
+                }
+                else if(n.x-n.radius<0){
+                    n.a= -n.a;
+                    n.x= n.radius;
+                }
+                if(n.y+n.radius>h){
+                    n.b= -n.b;
+                    n.y= h-n.radius;
+                }
+                else if(n.y-n.radius<0){
+                    n.b= -n.b;
+                    n.y= n.radius;
+                }
+            }
+
+            function checkCollisionPlayer(n,j){
+                if(overlap(n.x,n.y,n.radius,player.x,player.y,player.height,player.width)){
+                    ball.splice(j,1);
+                }
+            }
+
+            function overlap(cx,cy,r,px,py,ph,pw){
+                var testX= cx;
+                var testY= cy;
+// THESE LINES ARE FOR MOVING THE BALLS TOWARDS THE PLAYER
+                if(testX<px) testX=px;
+                if(testX>(px+pw)) testX=px+pw;
+                if(testY<py) testy=py;
+                if(testY>(py+ph)) testY=py+ph;
+
+                return (((cx-testX)*(cx-testX)+(cy-testY)*(cy-testY))< r*r);
+               // return((cx-px)*(cx-px)+(cy-py)*(cy-py)<r*r);   //DISTANCE FORMULA FOR CHECKING THE OVERLAPING BETWEEN THE BOX AND CIRCLE
+            }
+
+            function colorGenerate(){
+                var col= ['green','blue','pink','red','brown','yellow','black','orange','grey','golden'];
+                var i= Math.round((col.length-1)*Math.random());  //RETURN VALUES FROM 0 TO 9
+                return col[i];
+            }
+
+        </script>
+    </body>
+</html>
